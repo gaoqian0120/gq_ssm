@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:copntext="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+                http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--包扫描-->
+    <copntext:component-scan base-package="com.itheima"/>
+    <!--数据库连接池以及事务管理交给spring进行管理-->
+    <copntext:property-placeholder location="classpath:database.properties"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--事务管理-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--事务管理注解驱动-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!--sqlSessionFactory对象应该放到spring容器中作为单例进行管理-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" scope="singleton">
+        <!--别名映射扫描-->
+        <property name="typeAliasesPackage" value="com.itheima.entity"/>
+        <!--数据源dataSource-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--mapper动态代理对象交给spring进行管理,我们从spring容器中直接获取mapper的代理对象-->
+    <!--扫描mapper接口,生成代理对象生成的代理对象会走走走IOC容器中-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--mapper接口包的路径配置-->
+        <property name="basePackage" value="com.itheima.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+</beans>
